@@ -30,7 +30,9 @@
 
 /**
  * \file
- *         Battery and Temperature IPv6 Demo for Zolertia Z1
+ *         WaIS lab sensor
+ *         Philip Basford <pjb@ecs.soton.ac.uk>
+ * Based on work by
  * \author
  *         Niclas Finne    <nfi@sics.se>
  *         Joakim Eriksson <joakime@sics.se>
@@ -46,11 +48,12 @@
 #include "dev/cc2420.h"
 #include "dev/leds.h"
 #include <stdio.h>
+ #include "lab-sensor.h"
 
 
 float floor(float x){ 
-  if(x>=0.0f) return (float) ((int)x);
-  else        return (float) ((int)x-1);
+    if(x>=0.0f) return (float) ((int)x);
+    else        return (float) ((int)x-1);
 }
 
 PROCESS(web_sense_process, "Sense Web Demo");
@@ -63,20 +66,27 @@ static int battery1[HISTORY];
 static int sensors_pos;
 
 /*---------------------------------------------------------------------------*/
-static int
+int
 get_battery(void)
 {
-  return battery_sensor.value(0);
+    return battery_sensor.value(0);
 }
 /*---------------------------------------------------------------------------*/
-static int
+int 
 get_temp(void)
 {
-  return temperature_sensor.value(0);
+    return temperature_sensor.value(0);
 }
 
-static float get_mybatt(void){ return (float) ((get_battery()*2.500*2)/4096);}
-static float get_mytemp(void){ return (float) (((get_temp()*2.500)/4096)-0.986)*282;}
+float 
+get_mybatt(void){ 
+    return (float) ((get_battery()*2.500*2)/4096);
+}
+
+float 
+get_mytemp(void){ 
+    return (float) (((get_temp()*2.500)/4096)-0.986)*282;
+}
 
 /*---------------------------------------------------------------------------*/
 static const char *TOP = "<html><head><title>Contiki Web Sense</title></head><body>\n";
@@ -88,62 +98,64 @@ static int blen;
 #define ADD(...) do {                                                   \
     blen += snprintf(&buf[blen], sizeof(buf) - blen, __VA_ARGS__);      \
   } while(0)
-static void
+
+void
 generate_chart(const char *title, const char *unit, int min, int max, int *values)
 {
-  int i;
-  blen = 0;
-  ADD("<h1>%s</h1>\n"
-      "<img src=\"http://chart.apis.google.com/chart?"
-      "cht=lc&chs=400x300&chxt=x,x,y,y&chxp=1,50|3,50&"
-      "chxr=2,%d,%d|0,0,30&chds=%d,%d&chxl=1:|Time|3:|%s&chd=t:",
-      title, min, max, min, max, unit);
-  for(i = 0; i < HISTORY; i++) {
-    ADD("%s%d", i > 0 ? "," : "", values[(sensors_pos + i) % HISTORY]);
-  }
-  ADD("\">");
+    int i;
+    blen = 0;
+    ADD("<h1>%s</h1>\n"
+        "<img src=\"http://chart.apis.google.com/chart?"
+        "cht=lc&chs=400x300&chxt=x,x,y,y&chxp=1,50|3,50&"
+        "chxr=2,%d,%d|0,0,30&chds=%d,%d&chxl=1:|Time|3:|%s&chd=t:",
+        title, min, max, min, max, unit);
+    for(i = 0; i < HISTORY; i++) {
+        ADD("%s%d", i > 0 ? "," : "", values[(sensors_pos + i) % HISTORY]);
+    }
+    ADD("\">");
 }
+
 static
 PT_THREAD(send_values(struct httpd_state *s))
 {
-  PSOCK_BEGIN(&s->sout);
+    PSOCK_BEGIN(&s->sout);
 
-  SEND_STRING(&s->sout, TOP);
+    SEND_STRING(&s->sout, TOP);
 
-  if(strncmp(s->filename, "/index", 6) == 0 ||
-     s->filename[1] == '\0') {
-    /* Default page: show latest sensor values as text (does not
-       require Internet connection to Google for charts). */
-    blen = 0;
-    float mybatt = get_mybatt();
-    float mytemp = get_mytemp();
-    ADD("<h1>Current readings</h1>\n"
-        "Battery: %ld.%03d V<br>"
-        "Temperature: %ld.%03d &deg; C",
-        (long) mybatt, (unsigned) ((mybatt-floor(mybatt))*1000), 
-        (long) mytemp, (unsigned) ((mytemp-floor(mytemp))*1000)); 
-    SEND_STRING(&s->sout, buf);
+    if(strncmp(s->filename, "/index", 6) == 0 ||
+        s->filename[1] == '\0') {
+        /* Default page: show latest sensor values as text (does not
+           require Internet connection to Google for charts). */
+        blen = 0;
+        float mybatt = get_mybatt();
+        float mytemp = get_mytemp();
+        ADD("<h1>Current readings</h1>\n"
+            "Battery: %ld.%03d V<br>"
+            "Temperature: %ld.%03d &deg; C",
+            (long) mybatt, (unsigned) ((mybatt-floor(mybatt))*1000), 
+            (long) mytemp, (unsigned) ((mytemp-floor(mytemp))*1000)); 
+        SEND_STRING(&s->sout, buf);
 
-  } else if(s->filename[1] == '0') {
-    /* Turn off leds */
-    leds_off(LEDS_ALL);
-    SEND_STRING(&s->sout, "Turned off leds!");
+    } else if(s->filename[1] == '0') {
+        /* Turn off leds */
+        leds_off(LEDS_ALL);
+        SEND_STRING(&s->sout, "Turned off leds!");
 
-  } else if(s->filename[1] == '1') {
-    /* Turn on leds */
-    leds_on(LEDS_ALL);
-    SEND_STRING(&s->sout, "Turned on leds!");
+    } else if(s->filename[1] == '1') {
+        /* Turn on leds */
+        leds_on(LEDS_ALL);
+        SEND_STRING(&s->sout, "Turned on leds!");
 
-  } else {
-    if(s->filename[1] != 't') {
-      generate_chart("Battery", "mV", 0, 4000, battery1);
-      SEND_STRING(&s->sout, buf);
+    } else {
+        if(s->filename[1] != 't') {
+            generate_chart("Battery", "mV", 0, 4000, battery1);
+            SEND_STRING(&s->sout, buf);
+        }
+        if(s->filename[1] != 'b') {
+            generate_chart("Temperature", "Celsius", 0, 50, temperature);
+            SEND_STRING(&s->sout, buf);
+        }
     }
-    if(s->filename[1] != 'b') {
-      generate_chart("Temperature", "Celsius", 0, 50, temperature);
-      SEND_STRING(&s->sout, buf);
-    }
-  }
 
   SEND_STRING(&s->sout, BOTTOM);
 
@@ -153,30 +165,31 @@ PT_THREAD(send_values(struct httpd_state *s))
 httpd_simple_script_t
 httpd_simple_get_script(const char *name)
 {
-  return send_values;
+    return send_values;
 }
+
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(web_sense_process, ev, data)
 {
-  static struct etimer timer;
-  PROCESS_BEGIN();
-  cc2420_set_txpower(31);
+    static struct etimer timer;
+    PROCESS_BEGIN();
+    cc2420_set_txpower(31);
 
-  sensors_pos = 0;
-  process_start(&webserver_nogui_process, NULL);
+    sensors_pos = 0;
+    process_start(&webserver_nogui_process, NULL);
 
-  etimer_set(&timer, CLOCK_SECOND * 2);
-  SENSORS_ACTIVATE(battery_sensor);
-  SENSORS_ACTIVATE(temperature_sensor);
+    etimer_set(&timer, CLOCK_SECOND * 2);
+    SENSORS_ACTIVATE(battery_sensor);
+    SENSORS_ACTIVATE(temperature_sensor);
 
-  while(1) {
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
-    etimer_reset(&timer);
+    while(1) {
+        PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
+        etimer_reset(&timer);
 
-    battery1[sensors_pos] = get_mybatt()*1000;
-    temperature[sensors_pos] = get_mytemp();
-    sensors_pos = (sensors_pos + 1) % HISTORY;
-  }
+        battery1[sensors_pos] = get_mybatt()*1000;
+        temperature[sensors_pos] = get_mytemp();
+        sensors_pos = (sensors_pos + 1) % HISTORY;
+    }
 
   PROCESS_END();
 }
