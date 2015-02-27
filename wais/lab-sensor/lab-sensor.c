@@ -40,14 +40,7 @@
  *         Enric M. Calvo  <ecalvo@zolertia.com>
  */
 
-#include "contiki.h"
-#include "httpd-simple.h"
-#include "webserver-nogui.h"
-#include "dev/temperature-sensor.h"
-#include "dev/battery-sensor.h"
-#include "dev/cc2420.h"
-#include "dev/leds.h"
-#include <stdio.h>
+
  #include "lab-sensor.h"
 
 
@@ -64,6 +57,8 @@ AUTOSTART_PROCESSES(&web_sense_process);
 static int temperature[HISTORY];
 static int battery1[HISTORY];
 static int sensors_pos;
+static char buf[256];
+static int blen;
 
 /*---------------------------------------------------------------------------*/
 int
@@ -89,12 +84,10 @@ get_mytemp(void){
 }
 
 /*---------------------------------------------------------------------------*/
-static const char *TOP = "<html><head><title>Contiki Web Sense</title></head><body>\n";
-static const char *BOTTOM = "</body></html>\n";
+;
 /*---------------------------------------------------------------------------*/
 /* Only one single request at time */
-static char buf[256];
-static int blen;
+
 #define ADD(...) do {                                                   \
     blen += snprintf(&buf[blen], sizeof(buf) - blen, __VA_ARGS__);      \
   } while(0)
