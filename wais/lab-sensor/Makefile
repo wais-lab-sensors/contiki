@@ -1,5 +1,9 @@
 all: lab-sensor
 
+ifndef TARGET
+    TARGET=z1
+endif
+
 CONTIKI=../..
 
 WITH_UIP6=1
