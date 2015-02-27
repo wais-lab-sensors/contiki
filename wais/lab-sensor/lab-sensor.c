@@ -49,9 +49,9 @@ float floor(float x){
     else        return (float) ((int)x-1);
 }
 
-PROCESS(web_sense_process, "Sense Web Demo");
+PROCESS(lab_sense_process, "WaIS Lab sensors");
 
-AUTOSTART_PROCESSES(&web_sense_process);
+AUTOSTART_PROCESSES(&lab_sense_process);
 
 #define HISTORY 16
 static int temperature[HISTORY];
@@ -113,33 +113,25 @@ PT_THREAD(send_values(struct httpd_state *s))
 {
     PSOCK_BEGIN(&s->sout);
 
-    SEND_STRING(&s->sout, TOP);
+    printf("%s\n", s->filename);
 
-    if(strncmp(s->filename, "/index", 6) == 0 ||
+    if(strncmp(s->filename, "/t", 2) == 0 ||
         s->filename[1] == '\0') {
         /* Default page: show latest sensor values as text (does not
            require Internet connection to Google for charts). */
         blen = 0;
         float mybatt = get_mybatt();
         float mytemp = get_mytemp();
+        SEND_STRING(&s->sout, TOP);
         ADD("<h1>Current readings</h1>\n"
             "Battery: %ld.%03d V<br>"
             "Temperature: %ld.%03d &deg; C",
             (long) mybatt, (unsigned) ((mybatt-floor(mybatt))*1000), 
             (long) mytemp, (unsigned) ((mytemp-floor(mytemp))*1000)); 
         SEND_STRING(&s->sout, buf);
-
-    } else if(s->filename[1] == '0') {
-        /* Turn off leds */
-        leds_off(LEDS_ALL);
-        SEND_STRING(&s->sout, "Turned off leds!");
-
-    } else if(s->filename[1] == '1') {
-        /* Turn on leds */
-        leds_on(LEDS_ALL);
-        SEND_STRING(&s->sout, "Turned on leds!");
-
-    } else {
+        SEND_STRING(&s->sout, BOTTOM);
+    }else if(strncmp(s->filename, "/c", 6) == 0){
+        SEND_STRING(&s->sout, TOP);
         if(s->filename[1] != 't') {
             generate_chart("Battery", "mV", 0, 4000, battery1);
             SEND_STRING(&s->sout, buf);
@@ -148,9 +140,19 @@ PT_THREAD(send_values(struct httpd_state *s))
             generate_chart("Temperature", "Celsius", 0, 50, temperature);
             SEND_STRING(&s->sout, buf);
         }
+        SEND_STRING(&s->sout, BOTTOM);
+    }else{
+         blen=0;
+        float mybatt = get_mybatt();
+        float mytemp = get_mytemp();
+        ADD("{\"reading\":[{\"temperature\": %ld.%03d},{\"battery\":%ld.%03d}]}",
+             (long) mytemp, (unsigned) ((mytemp-floor(mytemp))*1000),
+              (long) mybatt, (unsigned) ((mybatt-floor(mybatt))*1000));
+        SEND_STRING(&s->sout, buf);
+
     }
 
-  SEND_STRING(&s->sout, BOTTOM);
+  
 
   PSOCK_END(&s->sout);
 }
@@ -162,7 +164,7 @@ httpd_simple_get_script(const char *name)
 }
 
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(web_sense_process, ev, data)
+PROCESS_THREAD(lab_sense_process, ev, data)
 {
     static struct etimer timer;
     PROCESS_BEGIN();

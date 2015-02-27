@@ -9,6 +9,7 @@
 #include "dev/cc2420.h"
 #include "dev/leds.h"
 #include <stdio.h>
+#include <string.h>
 
 
 #define HISTORY 16
