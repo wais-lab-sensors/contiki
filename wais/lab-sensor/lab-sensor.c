@@ -120,15 +120,15 @@ PT_THREAD(send_values(struct httpd_state *s))
          blen=0;
         mybatt = get_mybatt();
         mytemp = get_mytemp();
-        ADD("{\"reading\":[");//start of json
-        ADD("{\"internal\": %ld.%03d},{\"battery\":%ld.%03d},",
+        ADD("{\"reading\":{");//start of json
+        ADD("\"internal\": %ld.%03d,\"battery\":%ld.%03d,",
             (long) mytemp, (unsigned) ((mytemp-floor(mytemp))*1000),
             (long) mybatt, (unsigned) ((mybatt-floor(mybatt))*1000));
-        ADD("{\"x\":%d},{\"y\":%d},{\"z\":%d}",
+        ADD("\"x\":%d,\"y\":%d,\"z\":%d",
             (int) get_sensor_acc_x,
             (int) get_sensor_acc_y,
             (int) get_sensor_acc_z);
-        ADD("]}");//end of json
+        ADD("}}");//end of json
         SEND_STRING(&s->sout, buf);
 
     }
