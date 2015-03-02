@@ -41,3 +41,19 @@ float
 get_mytemp(void){ 
     return (float) (((get_temp()*2.500)/4096)-0.986)*282;
 }
+
+
+int16_t get_sensor_acc_x(void)
+{
+  return accm_read_axis(X_AXIS);
+}
+
+int16_t get_sensor_acc_y(void)
+{
+  return accm_read_axis(Y_AXIS);
+}
+
+int16_t get_sensor_acc_z(void)
+{
+  return accm_read_axis(Z_AXIS);
+}
