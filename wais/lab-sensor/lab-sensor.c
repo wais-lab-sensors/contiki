@@ -100,7 +100,7 @@ PT_THREAD(send_values(struct httpd_state *s))
         SEND_STRING(&s->sout, TOP);
         ADD("<h1>Current readings</h1>\n"
             "Battery: %ld.%03d V<br>"
-            "Temperature: %ld.%03d &deg; C",
+            "Internal Temperature: %ld.%03d &deg; C",
             (long) mybatt, (unsigned) ((mybatt-floor(mybatt))*1000), 
             (long) mytemp, (unsigned) ((mytemp-floor(mytemp))*1000)); 
         SEND_STRING(&s->sout, buf);
@@ -112,7 +112,7 @@ PT_THREAD(send_values(struct httpd_state *s))
             SEND_STRING(&s->sout, buf);
         }
         if(s->filename[1] != 'b') {
-            generate_chart("Temperature", "Celsius", 0, 50, temperature);
+            generate_chart("Internal Temperature", "Celsius", 0, 50, temperature);
             SEND_STRING(&s->sout, buf);
         }
         SEND_STRING(&s->sout, BOTTOM);
@@ -121,7 +121,7 @@ PT_THREAD(send_values(struct httpd_state *s))
         mybatt = get_mybatt();
         mytemp = get_mytemp();
         ADD("{\"reading\":[");//start of json
-        ADD("{\"temperature\": %ld.%03d},{\"battery\":%ld.%03d},",
+        ADD("{\"internal\": %ld.%03d},{\"battery\":%ld.%03d},",
             (long) mytemp, (unsigned) ((mytemp-floor(mytemp))*1000),
             (long) mybatt, (unsigned) ((mybatt-floor(mybatt))*1000));
         ADD("{\"x\":%d},{\"y\":%d},{\"z\":%d}",
