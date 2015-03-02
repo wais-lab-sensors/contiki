@@ -44,10 +44,7 @@
  #include "lab-sensor.h"
 
 
-float floor(float x){ 
-    if(x>=0.0f) return (float) ((int)x);
-    else        return (float) ((int)x-1);
-}
+
 
 PROCESS(lab_sense_process, "WaIS Lab sensors");
 
@@ -60,28 +57,7 @@ static int sensors_pos;
 static char buf[256];
 static int blen;
 
-/*---------------------------------------------------------------------------*/
-int
-get_battery(void)
-{
-    return battery_sensor.value(0);
-}
-/*---------------------------------------------------------------------------*/
-int 
-get_temp(void)
-{
-    return temperature_sensor.value(0);
-}
 
-float 
-get_mybatt(void){ 
-    return (float) ((get_battery()*2.500*2)/4096);
-}
-
-float 
-get_mytemp(void){ 
-    return (float) (((get_temp()*2.500)/4096)-0.986)*282;
-}
 
 /*---------------------------------------------------------------------------*/
 ;
@@ -114,14 +90,15 @@ PT_THREAD(send_values(struct httpd_state *s))
     PSOCK_BEGIN(&s->sout);
 
     printf("%s\n", s->filename);
-
+    float mybatt;
+    float mytemp;
     if(strncmp(s->filename, "/t", 2) == 0 ||
         s->filename[1] == '\0') {
         /* Default page: show latest sensor values as text (does not
            require Internet connection to Google for charts). */
         blen = 0;
-        float mybatt = get_mybatt();
-        float mytemp = get_mytemp();
+        mybatt = get_mybatt();
+        mytemp = get_mytemp();
         SEND_STRING(&s->sout, TOP);
         ADD("<h1>Current readings</h1>\n"
             "Battery: %ld.%03d V<br>"
@@ -143,8 +120,8 @@ PT_THREAD(send_values(struct httpd_state *s))
         SEND_STRING(&s->sout, BOTTOM);
     }else{
          blen=0;
-        float mybatt = get_mybatt();
-        float mytemp = get_mytemp();
+        mybatt = get_mybatt();
+        mytemp = get_mytemp();
         ADD("{\"reading\":[{\"temperature\": %ld.%03d},{\"battery\":%ld.%03d}]}",
              (long) mytemp, (unsigned) ((mytemp-floor(mytemp))*1000),
               (long) mybatt, (unsigned) ((mybatt-floor(mybatt))*1000));
@@ -174,8 +151,7 @@ PROCESS_THREAD(lab_sense_process, ev, data)
     process_start(&webserver_nogui_process, NULL);
 
     etimer_set(&timer, CLOCK_SECOND * 2);
-    SENSORS_ACTIVATE(battery_sensor);
-    SENSORS_ACTIVATE(temperature_sensor);
+    setup_sensors();
 
     while(1) {
         PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
