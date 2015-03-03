@@ -44,14 +44,11 @@
  #include "lab-sensor.h"
 
 
-float floor(float x){ 
-    if(x>=0.0f) return (float) ((int)x);
-    else        return (float) ((int)x-1);
-}
 
-PROCESS(web_sense_process, "Sense Web Demo");
 
-AUTOSTART_PROCESSES(&web_sense_process);
+PROCESS(lab_sense_process, "WaIS Lab sensors");
+
+AUTOSTART_PROCESSES(&lab_sense_process);
 
 #define HISTORY 16
 static int temperature[HISTORY];
@@ -60,28 +57,7 @@ static int sensors_pos;
 static char buf[256];
 static int blen;
 
-/*---------------------------------------------------------------------------*/
-int
-get_battery(void)
-{
-    return battery_sensor.value(0);
-}
-/*---------------------------------------------------------------------------*/
-int 
-get_temp(void)
-{
-    return temperature_sensor.value(0);
-}
 
-float 
-get_mybatt(void){ 
-    return (float) ((get_battery()*2.500*2)/4096);
-}
-
-float 
-get_mytemp(void){ 
-    return (float) (((get_temp()*2.500)/4096)-0.986)*282;
-}
 
 /*---------------------------------------------------------------------------*/
 ;
@@ -112,45 +88,52 @@ static
 PT_THREAD(send_values(struct httpd_state *s))
 {
     PSOCK_BEGIN(&s->sout);
-
-    SEND_STRING(&s->sout, TOP);
-
-    if(strncmp(s->filename, "/index", 6) == 0 ||
+    float mybatt;
+    float mytemp;
+    if(strncmp(s->filename, "/t", 2) == 0 ||
         s->filename[1] == '\0') {
         /* Default page: show latest sensor values as text (does not
            require Internet connection to Google for charts). */
         blen = 0;
-        float mybatt = get_mybatt();
-        float mytemp = get_mytemp();
+        mybatt = get_mybatt();
+        mytemp = get_mytemp();
+        SEND_STRING(&s->sout, TOP);
         ADD("<h1>Current readings</h1>\n"
             "Battery: %ld.%03d V<br>"
-            "Temperature: %ld.%03d &deg; C",
+            "Internal Temperature: %ld.%03d &deg; C",
             (long) mybatt, (unsigned) ((mybatt-floor(mybatt))*1000), 
             (long) mytemp, (unsigned) ((mytemp-floor(mytemp))*1000)); 
         SEND_STRING(&s->sout, buf);
-
-    } else if(s->filename[1] == '0') {
-        /* Turn off leds */
-        leds_off(LEDS_ALL);
-        SEND_STRING(&s->sout, "Turned off leds!");
-
-    } else if(s->filename[1] == '1') {
-        /* Turn on leds */
-        leds_on(LEDS_ALL);
-        SEND_STRING(&s->sout, "Turned on leds!");
-
-    } else {
+        SEND_STRING(&s->sout, BOTTOM);
+    }else if(strncmp(s->filename, "/c", 6) == 0){
+        SEND_STRING(&s->sout, TOP);
         if(s->filename[1] != 't') {
             generate_chart("Battery", "mV", 0, 4000, battery1);
             SEND_STRING(&s->sout, buf);
         }
         if(s->filename[1] != 'b') {
-            generate_chart("Temperature", "Celsius", 0, 50, temperature);
+            generate_chart("Internal Temperature", "Celsius", 0, 50, temperature);
             SEND_STRING(&s->sout, buf);
         }
+        SEND_STRING(&s->sout, BOTTOM);
+    }else{
+         blen=0;
+        mybatt = get_mybatt();
+        mytemp = get_mytemp();
+        ADD("{\"reading\":{");//start of json
+        ADD("\"internal\": %ld.%03d,\"battery\":%ld.%03d,",
+            (long) mytemp, (unsigned) ((mytemp-floor(mytemp))*1000),
+            (long) mybatt, (unsigned) ((mybatt-floor(mybatt))*1000));
+        ADD("\"x\":%d,\"y\":%d,\"z\":%d",
+            (int) get_sensor_acc_x,
+            (int) get_sensor_acc_y,
+            (int) get_sensor_acc_z);
+        ADD("}}");//end of json
+        SEND_STRING(&s->sout, buf);
+
     }
 
-  SEND_STRING(&s->sout, BOTTOM);
+  
 
   PSOCK_END(&s->sout);
 }
@@ -162,7 +145,7 @@ httpd_simple_get_script(const char *name)
 }
 
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(web_sense_process, ev, data)
+PROCESS_THREAD(lab_sense_process, ev, data)
 {
     static struct etimer timer;
     PROCESS_BEGIN();
@@ -172,8 +155,7 @@ PROCESS_THREAD(web_sense_process, ev, data)
     process_start(&webserver_nogui_process, NULL);
 
     etimer_set(&timer, CLOCK_SECOND * 2);
-    SENSORS_ACTIVATE(battery_sensor);
-    SENSORS_ACTIVATE(temperature_sensor);
+    setup_sensors();
 
     while(1) {
         PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
