@@ -1,7 +1,7 @@
 CONTIKI_PROJECT=border-router
 all: $(CONTIKI_PROJECT) 
 ifndef TARGET
-    TARGET=z1
+    TARGET=sky
 endif
 
 CONTIKI=../..
