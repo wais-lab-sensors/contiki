@@ -8,17 +8,16 @@ AUTOSTART_PROCESSES(&test_sht25_process);
 PROCESS_THREAD(test_sht25_process, ev, data)
 {
     static struct etimer et;
-    static unsigned rh;
     PROCESS_BEGIN();
     sht25_init();
+    printf("Starting loop\n");
     while(1){
         etimer_set(&et, CLOCK_SECOND);
         PROCESS_YIELD();
-        printf("Temperature: %u degrees Celsius\n",
-            (unsigned) (-39.60 + 0.01 * sht25_temp()));
-        rh = sht25_humidity();
-        printf("Rel. humidity: %u%%\n",
-            (unsigned) (-4 + 0.0405*rh - 2.8e-6*(rh*rh)));
+        printf("Raw temp =  %u \n", (unsigned) (sht25_temp()));
+        //rh = sht25_humidity();
+        //printf("Rel. humidity: %u%%\n",
+        //    (unsigned) (SHT2x_CalcRH(rh)));
         etimer_reset(&et);
     }
     PROCESS_END();

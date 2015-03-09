@@ -20,7 +20,9 @@
 /*---------------------------------------------------------------------------*/
 void 
 sht25_init(void){
+    PRINTF("Starting SHT25 init\n");
     I2C_ENABLE();
+    PRINTF("SHT25 init complete\n");
 }
 /*---------------------------------------------------------------------------*/
 void 
@@ -32,6 +34,8 @@ unsigned int
 sht25_temp(void){
     uint8_t tx_buf[TX_BUF_SIZE];
     uint8_t rx_buf[RX_BUF_SIZE];
+    uint8_t i;
+
     I2C_TRANSMIT_INIT(SHT25_ADDR);
     tx_buf[0] = SHT25_MEASURE_T_HOLD;
     I2C_TRANSMIT_N(1, &tx_buf);
@@ -39,8 +43,15 @@ sht25_temp(void){
     I2C_RECEIVE_INIT(SHT25_ADDR);
     while(I2C_BUSY());
     I2C_RECEIVE_N(3, &rx_buf);
-    PRINTF("Recieved bytes");
+    PRINTF("Recieved bytes\n");
+#ifdef SHT_DEBUG    
+    for(i = 0; i < 3; i++){
+        printf("%d:", rx_buf[i]);
+    }
+    printf("\n");
+#endif
     if(SHT2x_CheckCrc(rx_buf, 2, rx_buf[2])){
+        PRINTF("Returning %lu\n", ((uint16_t)rx_buf[0] << 8) + rx_buf[1]);
         return ((uint16_t)rx_buf[0] << 8) + rx_buf[1];
     }else{
         return -9999;
@@ -49,7 +60,7 @@ sht25_temp(void){
 /*---------------------------------------------------------------------------*/
 unsigned int
 sht25_humidity(void){
-    return -9999;
+  return -9999;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -101,7 +112,7 @@ SHT2x_CheckCrc(uint8_t data[], uint8_t nbrOfBytes, uint8_t checksum)
         PRINTF("CHECKSUM FAILURE %d != %d\n", crc, checksum);
         return 0;
     }else{
-        PRINTF("CHECKSUM OK");
+        PRINTF("CHECKSUM OK\n");
         return 1;
     }
 }
