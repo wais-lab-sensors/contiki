@@ -35,6 +35,7 @@ sht25_temp(void){
     uint8_t tx_buf[TX_BUF_SIZE];
     uint8_t rx_buf[RX_BUF_SIZE];
     uint8_t i;
+    uint8_t recvd;
 
     I2C_TRANSMIT_INIT(SHT25_ADDR);
     tx_buf[0] = SHT25_MEASURE_T_HOLD;
@@ -42,11 +43,11 @@ sht25_temp(void){
     while(I2C_BUSY());
     I2C_RECEIVE_INIT(SHT25_ADDR);
     while(I2C_BUSY());
-    I2C_RECEIVE_N(3, &rx_buf);
-    PRINTF("Recieved bytes\n");
+    recvd = I2C_RECEIVE_N(3, &rx_buf[0]);
+    PRINTF("Recieved %d bytes\n", recvd);
 #ifdef SHT_DEBUG    
     for(i = 0; i < 3; i++){
-        printf("%d:", rx_buf[i]);
+        printf("%x:", rx_buf[i]);
     }
     printf("\n");
 #endif
