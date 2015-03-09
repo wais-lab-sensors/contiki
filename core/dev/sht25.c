@@ -10,7 +10,7 @@
 #include "sht25-arch.h"
 
 
-#define SHT_DEBUG
+//#define SHT_DEBUG
 #ifdef SHT_DEBUG
     #include <stdio.h>
     #define PRINTF(...) printf(__VA_ARGS__)
@@ -34,6 +34,7 @@ unsigned int
 sht25_temp(void){
     uint8_t tx_buf[TX_BUF_SIZE];
     uint8_t rx_buf[RX_BUF_SIZE];
+ 
     uint8_t i;
     uint8_t recvd;
 
@@ -63,8 +64,10 @@ unsigned int
 sht25_humidity(void){
     uint8_t tx_buf[TX_BUF_SIZE];
     uint8_t rx_buf[RX_BUF_SIZE];
+
     uint8_t i;
     uint8_t recvd;
+
     I2C_TRANSMIT_INIT(SHT25_ADDR);
     tx_buf[0] = SHT25_MEASURE_RH_HOLD;
     I2C_TRANSMIT_N(1, &tx_buf);
