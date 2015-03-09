@@ -10,11 +10,18 @@
 #include "sampling.h"
 
 
-#define HISTORY 16
+#define WEBSERVER_CONF_LOADTIME 1
+#define WEBSERVER_CONF_FILESTATS 1
+#define WEBSERVER_CONF_NEIGHBOR_STATUS 1
+/* Adding links requires a larger RAM buffer. To avoid static allocation
+ * the stack can be used for formatting; however tcp retransmissions
+ * and multiple connections can result in garbled segments.
+ * TODO:use PSOCk_GENERATOR_SEND and tcp state storage to fix this.
+ */
+#define WEBSERVER_CONF_ROUTE_LINKS 1
 
 
-
-void generate_chart(const char *title, const char *unit, int min, int max, int *values);
+void ipaddr_add(const uip_ipaddr_t *addr);
 httpd_simple_script_t httpd_simple_get_script(const char *name);
 
 const char *TOP = "<html><head><title>Contiki Web Sense</title></head><body>\n";
