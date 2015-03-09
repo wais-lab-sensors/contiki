@@ -3,7 +3,7 @@ ifndef TARGET
 endif
 
 CONTIKI_PROJECT = sht25-test
-ROJECT_SOURCEFILES = sht25.h
+PROJECT_SOURCEFILES = sht25.c
 
 all: $(CONTIKI_PROJECT)
 

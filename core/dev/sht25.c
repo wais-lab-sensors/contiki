@@ -36,28 +36,32 @@ sht25_temp(void){
     tx_buf[0] = SHT25_MEASURE_T_HOLD;
     I2C_TRANSMIT_N(1, &tx_buf);
     while(I2C_BUSY());
-    I2C_RECIEVE_INIT(SHT25_ADDR);
+    I2C_RECEIVE_INIT(SHT25_ADDR);
     while(I2C_BUSY());
-    I2C_RECIEVE_N(3, &rx_buf);
+    I2C_RECEIVE_N(3, &rx_buf);
     PRINTF("Recieved bytes");
-    SHT2x_CheckCrc(&rx_buf, 2, rx_buf[2])
+    if(SHT2x_CheckCrc(rx_buf, 2, rx_buf[2])){
+        return ((uint16_t)rx_buf[0] << 8) + rx_buf[1];
+    }else{
+        return -9999;
+    }
 }
 /*---------------------------------------------------------------------------*/
 unsigned int
 sht25_humidity(void){
-
+    return -9999;
 }
 
 /*---------------------------------------------------------------------------*/
 float 
 SHT2x_CalcRH(uint16_t u16sRH)
 {
-    ft humidityRH;              // variable for result
+    float humidityRH;              // variable for result
 
     u16sRH &= ~0x0003;          // clear bits [1..0] (status bits)
     //-- calculate relative humidity [%RH] --
 
-    humidityRH = -6.0 + 125.0/65536 * (ft)u16sRH; // RH= -6 + 125 * SRH/2^16
+    humidityRH = -6.0 + 125.0/65536 * (float)u16sRH; // RH= -6 + 125 * SRH/2^16
     return humidityRH;
 }
 
@@ -65,12 +69,12 @@ SHT2x_CalcRH(uint16_t u16sRH)
 float 
 SHT2x_CalcTemperatureC(uint16_t u16sT)
 {
-    ft temperatureC;            // variable for result
+    float temperatureC;            // variable for result
 
     u16sT &= ~0x0003;           // clear bits [1..0] (status bits)
 
     //-- calculate temperature [°C] --
-    temperatureC= -46.85 + 175.72/65536 *(ft)u16sT; //T= -46.85 + 175.72 * ST/2^16
+    temperatureC= -46.85 + 175.72/65536 *(float)u16sT; //T= -46.85 + 175.72 * ST/2^16
     return temperatureC;
 }
 /*---------------------------------------------------------------------------*/
@@ -78,14 +82,16 @@ SHT2x_CalcTemperatureC(uint16_t u16sT)
 uint8_t 
 SHT2x_CheckCrc(uint8_t data[], uint8_t nbrOfBytes, uint8_t checksum)
 {
-    uint8_t crc = 0;  
+    uint8_t crc;
+    crc = 0;  
     uint8_t byteCtr;
+    uint8_t bit;
     //calculates 8-Bit checksum with given polynomial
     for (byteCtr = 0; byteCtr < nbrOfBytes; ++byteCtr){
         crc ^= (data[byteCtr]);
-        for (uint8_t bit = 8; bit > 0; --bit){
+        for (bit = 8; bit > 0; --bit){
             if (crc & 0x80){
-                crc = (crc << 1) ^ POLYNOMIAL;
+                crc = (crc << 1) ^ 0x131;
             }else{
                 crc = (crc << 1);
             }

@@ -29,7 +29,7 @@ unsigned int sht25_humidity(void);
 
 float SHT2x_CalcTemperatureC(uint16_t u16sT);
 float SHT2x_CalcRH(uint16_t u16sRH);
-uint8_t SHT2x_CheckCrc(uint8_t data[], uint8_t nbrOfBytes, uint8_t checksum)
+uint8_t SHT2x_CheckCrc(uint8_t data[], uint8_t nbrOfBytes, uint8_t checksum);
 
 
 #endif
