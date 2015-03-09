@@ -52,7 +52,7 @@ sht25_temp(void){
     printf("\n");
 #endif
     if(SHT2x_CheckCrc(rx_buf, 2, rx_buf[2])){
-        PRINTF("Returning %lu\n", ((uint16_t)rx_buf[0] << 8) + rx_buf[1]);
+        PRINTF("Returning %lu\n", ((long unsigned)rx_buf[0] << 8) + rx_buf[1]);
         return ((uint16_t)rx_buf[0] << 8) + rx_buf[1];
     }else{
         return -9999;
@@ -61,7 +61,30 @@ sht25_temp(void){
 /*---------------------------------------------------------------------------*/
 unsigned int
 sht25_humidity(void){
-  return -9999;
+    uint8_t tx_buf[TX_BUF_SIZE];
+    uint8_t rx_buf[RX_BUF_SIZE];
+    uint8_t i;
+    uint8_t recvd;
+    I2C_TRANSMIT_INIT(SHT25_ADDR);
+    tx_buf[0] = SHT25_MEASURE_RH_HOLD;
+    I2C_TRANSMIT_N(1, &tx_buf);
+    while(I2C_BUSY());
+    I2C_RECEIVE_INIT(SHT25_ADDR);
+    while(I2C_BUSY());
+    recvd = I2C_RECEIVE_N(3, &rx_buf[0]);
+    PRINTF("Recieved %d bytes\n", recvd);
+#ifdef SHT_DEBUG    
+    for(i = 0; i < 3; i++){
+        printf("%x:", rx_buf[i]);
+    }
+    printf("\n");
+#endif
+    if(SHT2x_CheckCrc(rx_buf, 2, rx_buf[2])){
+        PRINTF("Returning %lu\n", ((long unsigned)rx_buf[0] << 8) + rx_buf[1]);
+        return ((uint16_t)rx_buf[0] << 8) + rx_buf[1];
+    }else{
+        return -9999;
+    }
 }
 
 /*---------------------------------------------------------------------------*/

@@ -31,10 +31,11 @@ PROCESS_THREAD(test_sht25_process, ev, data)
         raw_temp = sht25_temp();
         printf("Raw temp =  %d \n",  (raw_temp));
         temp = SHT2x_CalcTemperatureC(raw_temp);
-        printf("Temp = %ld.%03d\n", (long)temp, (unsigned)((temp-floor(temp)) * 1000));
-        //rh = sht25_humidity();
-        //printf("Rel. humidity: %u%%\n",
-        //    (unsigned) (SHT2x_CalcRH(rh)));
+        printf("Temp = %ld.%03dC\n", (long)temp, (unsigned)((temp-floor(temp)) * 1000));
+        raw_hum = sht25_humidity();
+        printf("Raw humidity =  %d \n",  (raw_hum));
+        hum = SHT2x_CalcRH(raw_hum);
+        printf("humidity = %ld.%03d%\n", (long)hum, (unsigned)((hum-floor(hum)) * 1000));
         etimer_reset(&et);
     }
     PROCESS_END();
