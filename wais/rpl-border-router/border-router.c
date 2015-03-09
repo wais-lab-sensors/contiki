@@ -145,7 +145,6 @@ ipaddr_add(const uip_ipaddr_t *addr)
 static
 PT_THREAD(generate_routes(struct httpd_state *s))
 {
-  static int i;
   static uip_ds6_route_t *r;
   static uip_ds6_nbr_t *nbr;
 #if BUF_USES_STACK
@@ -227,7 +226,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 #if WEBSERVER_CONF_ROUTE_LINKS
     ADD("<a href=http://[");
     ipaddr_add(&r->ipaddr);
-    ADD("]/status.shtml>");
+    ADD("]/>");
     ipaddr_add(&r->ipaddr);
     ADD("</a>");
 #else
@@ -269,7 +268,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 
 #if WEBSERVER_CONF_LOADTIME
   numticks = clock_time() - numticks + 1;
-  ADD(" <i>(%u.%02u sec)</i>",numticks/CLOCK_SECOND,((100*(numticks%CLOCK_SECOND))/CLOCK_SECOND));
+  ADD(" <i>(%lu.%02lu sec)</i>",numticks/CLOCK_SECOND,((100*(numticks%CLOCK_SECOND))/CLOCK_SECOND));
 #endif
 
   SEND_STRING(&s->sout, buf);
