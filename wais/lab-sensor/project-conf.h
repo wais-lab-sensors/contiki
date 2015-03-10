@@ -45,6 +45,6 @@
 
 #define I2C_CONF_RX_WITH_INTERRUPT 0
 
-#define HAS_SHT25
+//#define HAS_SHT25
 
 #endif /* __PROJECT_RPL_WEB_CONF_H__ */
