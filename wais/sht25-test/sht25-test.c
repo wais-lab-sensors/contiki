@@ -35,7 +35,7 @@ PROCESS_THREAD(test_sht25_process, ev, data)
         raw_hum = sht25_humidity();
         //printf("Raw humidity =  %d \n",  (raw_hum));
         hum = SHT2x_CalcRH(raw_hum);
-        printf("humidity = %ld.%03d%\n", (long)hum, (unsigned)((hum-floor(hum)) * 1000));
+        printf("humidity = %ld.%03d%%\n", (long)hum, (unsigned)((hum-floor(hum)) * 1000));
         etimer_reset(&et);
     }
     PROCESS_END();
