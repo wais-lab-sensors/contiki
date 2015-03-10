@@ -10,9 +10,9 @@
 
 #include "lib/sensors.h"
 
-extern const struct sensors_sensor sh25_sensor;
+extern const struct sensors_sensor sht25_sensor;
 
-#define SH25_SENSOR_TEMP              0
-#define SH25_SENSOR_HUMIDITY          1
+#define SHT25_SENSOR_TEMP              0
+#define SHT25_SENSOR_HUMIDITY          1
 
 #endif

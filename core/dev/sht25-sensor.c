@@ -9,18 +9,23 @@
 
 #include "contiki.h"
 #include "lib/sensors.h"
-#include "dev/sht11.h"
-#include "dev/sht11-sensor.h"
+#include "dev/sht25.h"
+#include "dev/sht25-sensor.h"
 
 const struct sensors_sensor sht25_sensor;
+
+enum {
+  ON, OFF
+};
+static uint8_t state = OFF;
 /*---------------------------------------------------------------------------*/
 static int
 value(int type)
 {
     switch(type) {
-        case SHT11_SENSOR_TEMP:
+        case SHT25_SENSOR_TEMP:
             return sht25_temp();;
-        case SHT11_SENSOR_HUMIDITY:
+        case SHT25_SENSOR_HUMIDITY:
             return sht25_humidity();
 
     }
@@ -49,7 +54,7 @@ configure(int type, int c)
     if(c) {
       if(!status(SENSORS_ACTIVE)) {
         rtimer_clock_t t0;
-    sht25_init();
+        sht25_init();
         state = ON;
 
         /* For for about 15 ms before the SHT25 can be used. */
