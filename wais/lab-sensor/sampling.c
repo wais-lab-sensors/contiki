@@ -6,6 +6,9 @@ setup_sensors(void)
 {
 	SENSORS_ACTIVATE(battery_sensor);
     SENSORS_ACTIVATE(temperature_sensor);
+#ifdef HAS_SHT25
+    SENSORS_ACTIVATE(sht25_sensor);
+#endif
 }
 
 
@@ -43,17 +46,47 @@ get_internal_temp_converted(void){
 }
 
 
-int16_t get_sensor_acc_x(void)
+int16_t 
+get_sensor_acc_x(void)
 {
-  return accm_read_axis(X_AXIS);
+    return accm_read_axis(X_AXIS);
 }
 
-int16_t get_sensor_acc_y(void)
+int16_t 
+get_sensor_acc_y(void)
 {
-  return accm_read_axis(Y_AXIS);
+    return accm_read_axis(Y_AXIS);
 }
 
-int16_t get_sensor_acc_z(void)
+int16_t 
+get_sensor_acc_z(void)
 {
-  return accm_read_axis(Z_AXIS);
+    return accm_read_axis(Z_AXIS);
 }
+
+
+#ifdef HAS_SHT25
+uint16_t 
+get_sht_temperature(void)
+{
+    return sht25_sensor.value(SHT25_SENSOR_TEMP);
+}
+
+float 
+get_sht_temperature_converted(void)
+{
+    return SHT2x_CalcTemperatureC(get_sht_temperature());
+}
+
+uint16_t 
+get_sht_humidity(void)
+{
+    return sht25_sensor.value(SHT25_SENSOR_HUMIDITY);
+}
+
+float 
+get_sht_humidity_converted(void)
+{
+    return SHT2x_CalcRH(get_sht_humidity());
+}
+#endif

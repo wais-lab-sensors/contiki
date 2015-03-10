@@ -96,6 +96,21 @@ PT_THREAD(send_values(struct httpd_state *s))
     PSOCK_BEGIN(&s->sout);
     float mybatt;
     float internal_temp;
+    static uip_ds6_route_t *r;
+    static uip_ds6_nbr_t *nbr;
+#if WEBSERVER_CONF_NEIGHBOR_STATUS
+    static uint8_t j;
+#endif
+#if WEBSERVER_CONF_FILESTATS
+    static uint16_t numtimes;
+#endif
+#if WEBSERVER_CONF_LOADTIME
+    static clock_time_t numticks;
+#endif
+#ifdef HAS_SHT25
+    float sht25_temp;
+    float sht25_hum;
+#endif
     if(strncmp(s->filename, "/t", 2) == 0 ||
         s->filename[1] == '\0') {
         /* Default page: show latest sensor values as text (does not
@@ -112,14 +127,9 @@ PT_THREAD(send_values(struct httpd_state *s))
         SEND_STRING(&s->sout, buf);
         SEND_STRING(&s->sout, BOTTOM);
     }else if (strncmp(s->filename, "/r", 2) == 0) {
-        static uip_ds6_route_t *r;
-        static uip_ds6_nbr_t *nbr;
 #if WEBSERVER_CONF_LOADTIME
-        static clock_time_t numticks;
         numticks = clock_time();
 #endif
-
-
         SEND_STRING(&s->sout, TOP);
         blen = 0;
         ADD("Neighbors<pre>");
@@ -130,7 +140,7 @@ PT_THREAD(send_values(struct httpd_state *s))
 
 #if WEBSERVER_CONF_NEIGHBOR_STATUS
 
-            uint8_t j=blen+25;
+            j=blen+25;
             ipaddr_add(&nbr->ipaddr);
             while (blen < j){
                 ADD(" ");
@@ -184,7 +194,7 @@ PT_THREAD(send_values(struct httpd_state *s))
         ADD("</pre>");
 
 #if WEBSERVER_CONF_FILESTATS
-        static uint16_t numtimes;
+        
         ADD("<br><i>This page sent %u times</i>",++numtimes);
 #endif
 
@@ -208,6 +218,20 @@ PT_THREAD(send_values(struct httpd_state *s))
             (int) get_sensor_acc_x,
             (int) get_sensor_acc_y,
             (int) get_sensor_acc_z);
+#ifdef HAS_SHT25
+        sht25_temp = get_sht_temperature_converted();
+        sht25_hum = get_sht_humidity_converted();
+        if(sht25_temp != -46.85){
+            //If this isn't true then the sht isn't attached or is not giving data back
+            ADD(",\"temperature\":%ld.%03d",
+                (long) sht25_temp, (unsigned) ((sht25_temp-floor(sht25_temp))*1000));
+        }
+        if(sht25_hum != -6){
+            //If this isn't true then the sht isn't attached or is not giving back valid data
+            ADD(",\"humidity\":%ld.%03d",
+                (long) sht25_hum, (unsigned) ((sht25_hum-floor(sht25_hum))*1000));
+        }
+#endif
         ADD("}}");//end of json
         SEND_STRING(&s->sout, buf);
 
@@ -230,6 +254,9 @@ PROCESS_THREAD(lab_sense_process, ev, data)
     PROCESS_BEGIN();
     cc2420_set_txpower(31);
 
+#ifdef HAS_SHT25
+    printf("SHT25 enabled\n");
+#endif
     process_start(&webserver_nogui_process, NULL);
 
     setup_sensors();

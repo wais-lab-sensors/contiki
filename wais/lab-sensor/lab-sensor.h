@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "sampling.h"
+#include "project-conf.h"
 
 
 #define WEBSERVER_CONF_LOADTIME 1
@@ -19,6 +20,8 @@
  * TODO:use PSOCk_GENERATOR_SEND and tcp state storage to fix this.
  */
 #define WEBSERVER_CONF_ROUTE_LINKS 1
+
+
 
 
 void ipaddr_add(const uip_ipaddr_t *addr);
