@@ -225,11 +225,15 @@ PT_THREAD(send_values(struct httpd_state *s))
             //If this isn't true then the sht isn't attached or is not giving data back
             ADD(",\"temperature\":%ld.%03d",
                 (long) sht25_temp, (unsigned) ((sht25_temp-floor(sht25_temp))*1000));
+        }else{
+            printf("SHT25 enabled but invalid temperature data received\n");
         }
         if(sht25_hum != -6){
             //If this isn't true then the sht isn't attached or is not giving back valid data
             ADD(",\"humidity\":%ld.%03d",
                 (long) sht25_hum, (unsigned) ((sht25_hum-floor(sht25_hum))*1000));
+        }else{
+            printf("SHT25 enabled but invalid humidity data received\n");
         }
 #endif
         ADD("}}");//end of json

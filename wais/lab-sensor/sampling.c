@@ -75,7 +75,13 @@ get_sht_temperature(void)
 float 
 get_sht_temperature_converted(void)
 {
-    return SHT2x_CalcTemperatureC(get_sht_temperature());
+    uint16_t temp;
+    float converted;
+    temp = get_sht_temperature();
+    //printf("raw temp = %d", temp);
+    converted = SHT2x_CalcTemperatureC(temp);
+    //printf("Temp = %ld.%03dC\n", (long)converted, (unsigned)((converted-floor(converted)) * 1000));
+    return converted;
 }
 
 uint16_t 

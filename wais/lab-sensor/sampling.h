@@ -7,6 +7,7 @@
 #include "dev/cc2420.h"
 #include "adxl345.h"
 #include <stdint.h>
+#include <stdio.h>
 #include "project-conf.h"
 
 void setup_sensors(void);
