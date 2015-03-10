@@ -95,20 +95,20 @@ PT_THREAD(send_values(struct httpd_state *s))
 {
     PSOCK_BEGIN(&s->sout);
     float mybatt;
-    float mytemp;
+    float internal_temp;
     if(strncmp(s->filename, "/t", 2) == 0 ||
         s->filename[1] == '\0') {
         /* Default page: show latest sensor values as text (does not
            require Internet connection to Google for charts). */
         blen = 0;
         mybatt = get_mybatt();
-        mytemp = get_mytemp();
+        internal_temp = get_internal_temp_converted();
         SEND_STRING(&s->sout, TOP);
         ADD("<h1>Current readings</h1>\n"
             "Battery: %ld.%03d V<br>"
             "Internal Temperature: %ld.%03d &deg; C",
             (long) mybatt, (unsigned) ((mybatt-floor(mybatt))*1000), 
-            (long) mytemp, (unsigned) ((mytemp-floor(mytemp))*1000)); 
+            (long) internal_temp, (unsigned) ((internal_temp-floor(internal_temp))*1000)); 
         SEND_STRING(&s->sout, buf);
         SEND_STRING(&s->sout, BOTTOM);
     }else if (strncmp(s->filename, "/r", 2) == 0) {
@@ -199,10 +199,10 @@ PT_THREAD(send_values(struct httpd_state *s))
     }else{
         blen=0;
         mybatt = get_mybatt();
-        mytemp = get_mytemp();
+        internal_temp = get_internal_temp_converted();
         ADD("{\"reading\":{");//start of json
         ADD("\"internal\": %ld.%03d,\"battery\":%ld.%03d,",
-            (long) mytemp, (unsigned) ((mytemp-floor(mytemp))*1000),
+            (long) internal_temp, (unsigned) ((internal_temp-floor(internal_temp))*1000),
             (long) mybatt, (unsigned) ((mybatt-floor(mybatt))*1000));
         ADD("\"x\":%d,\"y\":%d,\"z\":%d",
             (int) get_sensor_acc_x,

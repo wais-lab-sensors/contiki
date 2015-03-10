@@ -27,7 +27,7 @@ get_battery(void)
 }
 /*---------------------------------------------------------------------------*/
 int 
-get_temp(void)
+get_internal_temp(void)
 {
     return temperature_sensor.value(0);
 }
@@ -38,8 +38,8 @@ get_mybatt(void){
 }
 
 float 
-get_mytemp(void){ 
-    return (float) (((get_temp()*2.500)/4096)-0.986)*282;
+get_internal_temp_converted(void){ 
+    return (float) (((get_internal_temp()*2.500)/4096)-0.986)*282;
 }
 
 

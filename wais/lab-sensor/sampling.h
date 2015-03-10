@@ -12,9 +12,9 @@ void setup_sensors(void);
 
 float floor(float x);
 int get_battery(void);
-int get_temp(void);
+int get_internal_temp(void);
 float get_mybatt(void);
-float get_mytemp(void);
+float get_internal_temp_converted(void);
 int16_t get_sensor_acc_x(void);
 int16_t get_sensor_acc_y(void);
 int16_t get_sensor_acc_z(void);
