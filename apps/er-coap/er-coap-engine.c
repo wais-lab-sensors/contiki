@@ -89,7 +89,7 @@ coap_receive(void)
 
     if(erbium_status_code == NO_ERROR) {
 
-      /*TODO duplicates suppression, if required by application */
+      /* TODO duplicates suppression, if required by application */
 
       PRINTF("  Parsed: v %u, t %u, tkl %u, c %u, mid %u\n", message->version,
              message->type, message->token_len, message->code, message->mid);
@@ -104,7 +104,7 @@ coap_receive(void)
               coap_new_transaction(message->mid, &UIP_IP_BUF->srcipaddr,
                                    UIP_UDP_BUF->srcport))) {
           uint32_t block_num = 0;
-          uint16_t block_size = REST_MAX_CHUNK_SIZE;
+          uint16_t block_size = COAP_MAX_BLOCK_SIZE;
           uint32_t block_offset = 0;
           int32_t new_offset = 0;
 
@@ -117,16 +117,20 @@ coap_receive(void)
             /* unreliable NON requests are answered with a NON as well */
             coap_init_message(response, COAP_TYPE_NON, CONTENT_2_05,
                               coap_get_mid());
-            /* mirror token */
-          } if(message->token_len) {
-            coap_set_token(response, message->token, message->token_len);
-            /* get offset for blockwise transfers */
           }
+
+          /* mirror token */
+          if (message->token_len) {
+            coap_set_token(response, message->token, message->token_len);
+          }
+
+          /* get offset for blockwise transfers */
+
           if(coap_get_header_block2
                (message, &block_num, NULL, &block_size, &block_offset)) {
             PRINTF("Blockwise: block request %lu (%u/%u) @ %lu bytes\n",
-                   block_num, block_size, REST_MAX_CHUNK_SIZE, block_offset);
-            block_size = MIN(block_size, REST_MAX_CHUNK_SIZE);
+                   block_num, block_size, COAP_MAX_BLOCK_SIZE, block_offset);
+            block_size = MIN(block_size, COAP_MAX_BLOCK_SIZE);
             new_offset = block_offset;
           }
 
@@ -151,7 +155,7 @@ coap_receive(void)
                   erbium_status_code = NOT_IMPLEMENTED_5_01;
                   coap_error_message = "NoBlock1Support";
 
-                  /* client requested Block2 transfer */
+                /* client requested Block2 transfer */
                 } else if(IS_OPTION(message, COAP_OPTION_BLOCK2)) {
 
                   /* unchanged new_offset indicates that resource is unaware of blockwise transfer */
@@ -176,7 +180,7 @@ coap_receive(void)
                                            block_offset, block_size));
                     } /* if(valid offset) */
 
-                    /* resource provides chunk-wise data */
+                  /* resource provides chunk-wise data */
                   } else {
                     PRINTF("Blockwise: blockwise resource, new offset %ld\n",
                            new_offset);
@@ -191,22 +195,22 @@ coap_receive(void)
                     }
                   } /* if(resource aware of blockwise) */
 
-                  /* Resource requested Block2 transfer */
+                /* Resource requested Block2 transfer, but client did not */
                 } else if(new_offset != 0) {
                   PRINTF
                     ("Blockwise: no block option for blockwise resource, using block size %u\n",
-                    COAP_MAX_BLOCK_SIZE);
+                    block_size);
 
                   coap_set_header_block2(response, 0, new_offset != -1,
-                                         COAP_MAX_BLOCK_SIZE);
+                                         block_size);
                   coap_set_payload(response, response->payload,
                                    MIN(response->payload_len,
-                                       COAP_MAX_BLOCK_SIZE));
+                                       block_size));
                 } /* blockwise transfer handling */
               } /* no errors/hooks */
-                /* successful service callback */
-                /* serialize response */
-            }
+            } /* successful service callback */
+
+            /* serialize response */
             if(erbium_status_code == NO_ERROR) {
               if((transaction->packet_len = coap_serialize_message(response,
                                                                    transaction->
@@ -224,7 +228,7 @@ coap_receive(void)
           coap_error_message = "NoFreeTraBuffer";
         } /* if(transaction buffer) */
 
-        /* handle responses */
+      /* handle responses */
       } else {
 
         if(message->type == COAP_TYPE_CON && message->code == 0) {
