@@ -640,6 +640,10 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       coap_pkt->block2_size = 16 << (coap_pkt->block2_num & 0x07);
       coap_pkt->block2_offset = (coap_pkt->block2_num & ~0x0000000F)
         << (coap_pkt->block2_num & 0x07);
+
+      // DO NOT REMOVE - Hacky fix to prevent block2_size from being set to 0. Possibly threading issue.
+      printf("%d\n", coap_pkt->block2_size);
+
       coap_pkt->block2_num >>= 4;
       PRINTF("Block2 [%lu%s (%u B/blk)]\n", coap_pkt->block2_num,
              coap_pkt->block2_more ? "+" : "", coap_pkt->block2_size);
